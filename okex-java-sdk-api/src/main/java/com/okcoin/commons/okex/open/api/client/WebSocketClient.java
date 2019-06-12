@@ -109,7 +109,9 @@ public class WebSocketClient {
             @Override
             public void onFailure(final WebSocket webSocket, final Throwable t, final Response response) {
                 System.out.println("Connection failed,Please reconnect!");
-                service.shutdown();
+                if (Objects.nonNull(service)) {
+                    service.shutdown();
+                }
             }
 
             @Override

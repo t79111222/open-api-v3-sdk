@@ -9,8 +9,7 @@ public class WebSocketBaseTest {
      public WebSocketConfig config;
 
      public WebSocketConfig setConfig(){
-         WebSocketConfig config = new WebSocketConfig("haha");
-         config.setUrl("ws://192.168.80.113:10442/ws/v3?_compress=true");
+         WebSocketConfig config = new WebSocketConfig("ws://192.168.80.113:10442/ws/v3?_compress=true");
          config.setApiKey("bb57a1b3-6257-47ff-b06c-faafc4d28fad");
          config.setSecretKey("5CE31E70CD129F34B9E17C38534DDF90");
          config.setPassphrase("123456");
@@ -22,8 +21,8 @@ public class WebSocketBaseTest {
          //需要登录才能订阅的频道
          ArrayList<String> loginList = new ArrayList<>();
          loginList.add("perpetual/account:BTC-USD-SWAP");
-         loginList.add("perpetual/position:BTC-USD-SWAP");
-         loginList.add("perpetual/order:BTC-USD-SWAP");
+//         loginList.add("perpetual/position:BTC-USD-SWAP");
+//         loginList.add("perpetual/order:BTC-USD-SWAP");
          config.setList(withOutLoginList);
          return config;
      }
