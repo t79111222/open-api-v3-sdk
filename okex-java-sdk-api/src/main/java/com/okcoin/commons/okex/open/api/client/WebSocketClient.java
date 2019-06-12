@@ -33,7 +33,6 @@ import java.util.zip.CRC32;
 public class WebSocketClient {
     private static WebSocket webSocket = null;
     private static Boolean flag = false;
-    private static final Logger LOG = LoggerFactory.getLogger(WebSocketClient.class);
     private static WebSocketConfig config;
     private static String sign;
     private static TreeMap<Double, Double> askMap = new TreeMap<Double, Double>();
