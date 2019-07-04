@@ -16,7 +16,7 @@ public class WebSocketConfig {
      */
     private String apiKey;
     /**
-     * The user's secret key provided by OKEx. The secret key used to sign your request data.
+     * The user's secret key provided by OKEx. The secret key used to sign your request data. 
      */
     private String secretKey;
     /**
