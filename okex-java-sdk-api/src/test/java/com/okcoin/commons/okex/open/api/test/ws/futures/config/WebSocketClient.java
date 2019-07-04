@@ -63,12 +63,6 @@ public class WebSocketClient {
             }
 
             @Override
-            public void onMessage(final WebSocket webSocket, final String s) {
-                isLogin(s);
-                System.out.println("Received message:" + s);
-            }
-
-            @Override
             public void onClosing(WebSocket webSocket, int code, String reason) {
                 System.out.println("Connection is about to disconnect！");
                 webSocket.close(1000, "Long time no message was sent or received！");
@@ -111,40 +105,6 @@ public class WebSocketClient {
             return out.toString();
         } catch (final IOException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-
-    private static void setString(StringBuilder stringBuilder, Map.Entry<Double, Double> anext, Map.Entry<Double, Double> bnext) {
-        String key1 = doubleToString(anext.getKey());
-        String value1 = doubleToString(anext.getValue());
-        String key2 = doubleToString(bnext.getKey());
-        String value2 = doubleToString(bnext.getValue());
-        stringBuilder.append(key2).append(":").append(value2).append(":");
-        stringBuilder.append(key1).append(":").append(value1).append(":");
-    }
-
-    private static void addString(StringBuilder stringBuilder, Map.Entry<Double, Double> next) {
-        String key = doubleToString(next.getKey());
-        String value = doubleToString(next.getValue());
-        stringBuilder.append(key).append(":").append(value).append(":");
-    }
-
-    private static void changeMap(List<List<Double>> list, Map<Double, Double> map) {
-        for (List<Double> a : list) {
-            map.put(a.get(0), a.get(1));
-            if (a.get(1) == 0) {
-                map.remove(a.get(0));
-            }
-        }
-    }
-
-    private static String doubleToString(double number) {
-        if (number % 1 == 0) {
-            String str = number + "";
-            return str.substring(0, str.length() - 2);
-        } else {
-            return number + "";
         }
     }
 

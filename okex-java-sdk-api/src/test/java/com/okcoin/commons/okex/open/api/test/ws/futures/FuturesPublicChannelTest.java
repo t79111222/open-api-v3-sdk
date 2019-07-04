@@ -46,7 +46,7 @@ public class FuturesPublicChannelTest {
         webSocketClient.subscribe(channel);
         //为保证测试方法不停，需要让线程延迟
         try {
-            Thread.sleep(3000);
+            Thread.sleep(10000000);
         } catch (Exception e) {
             e.printStackTrace();
         }

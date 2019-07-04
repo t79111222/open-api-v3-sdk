@@ -9,11 +9,11 @@ package com.okcoin.commons.okex.open.api.test.ws.futures.config;
  */
 public class WebSocketConfig {
     // okex webSocket url
-    private static final String SERVICE_URL = "wss://okexcomreal.bafang.com:10442/ws/v3?_compress=false";
+    private static final String SERVICE_URL = "wss://real.okex.com:10442/ws/v3";
     // api key
-    private static final String API_KEY = "a4a7993e-2a96-4fce-97ad-5e51d56f8f0b";
+    private static final String API_KEY = "fdd70f99-44ea-4931-b265-7af83454eb0c";
     // secret key
-    private static final String SECRET_KEY = "980B7367F164E3DAC4256FA6530C97A6";
+    private static final String SECRET_KEY = "520B56431E39D5B99EC6F3E7B4014031";
     // passphrase
     private static final String PASSPHRASE = "123456";
 
