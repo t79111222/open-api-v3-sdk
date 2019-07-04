@@ -2,10 +2,10 @@ package com.okcoin.commons.okex.open.api.config;
 
 import com.okcoin.commons.okex.open.api.enums.I18nEnum;
 import lombok.Data;
-
-import java.util.List;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class WebSocketConfig {
     /**
      * Rest api endpoint url.
@@ -29,10 +29,6 @@ public class WebSocketConfig {
     private I18nEnum i18n;
 
     private boolean print;
-
-    private List<String> list;
-
-    public WebSocketConfig(){}
 
     public WebSocketConfig(String url){
         this.url = url;
