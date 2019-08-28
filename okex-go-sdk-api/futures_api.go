@@ -254,8 +254,8 @@ POST /api/futures/v3/cancel_order/BTC-USD-180309/1407616797780992
 or
 POST /api/futures/v3/cancel_order/BTC-USD-180309/1407616797780992ee
 */
-func (client *Client) CancelFuturesInstrumentOrder(InstrumentId string, orderid_or_clientoId string) (map[string]string, error) {
-	var cancelInstrumentOrderResult map[string]string
+func (client *Client) CancelFuturesInstrumentOrder(InstrumentId string, orderid_or_clientoId string) (map[string]interface{}, error) {
+	var cancelInstrumentOrderResult map[string]interface{}
 	_, err := client.Request(POST, GetInstrumentIdOrdersUri(FUTURES_INSTRUMENT_ORDER_CANCEL, InstrumentId, orderid_or_clientoId), nil,
 		&cancelInstrumentOrderResult)
 	return cancelInstrumentOrderResult, err
@@ -618,9 +618,10 @@ GET/api/futures/v3/accounts/eos/ledger?after=2510946217009854&limit=3
 */
 func (client *Client) GetFuturesAccountsLedgerByCurrency(currency string, optionalParams map[string]string) ([]map[string]interface{}, error) {
 	var ledger []map[string]interface{}
-	params := NewParams()
 
+	var params map[string]string = nil
 	if optionalParams != nil && len(optionalParams) > 0 {
+		params = NewParams()
 		for k, v := range optionalParams {
 			if len(v) > 0 {
 				params[k] = v
@@ -657,7 +658,7 @@ func (client *Client) GetFuturesInstrumentTrades(InstrumentId string, optionalPa
 		}
 	}
 
-	uri := BuildParams(GetCurrencyUri(FUTURES_INSTRUMENT_TRADES, InstrumentId), params)
+	uri := BuildParams(GetInstrumentIdUri(FUTURES_INSTRUMENT_TRADES, InstrumentId), params)
 	_, err := client.Request(GET, uri, nil, &trades)
 	if err != nil {
 		return nil, err
@@ -677,8 +678,8 @@ GET /api/futures/v3/orders/<instrument_id>
 请求示例
 GET/api/futures/v3/orders/BTC-USD-190628?state=2&after=2517062044057601&limit=2
 */
-func (client *Client) GetFuturesOrders(InstrumentId, state string, optionalParams map[string]string) ([]map[string]interface{}, error) {
-	var ordersResult []map[string]interface{}
+func (client *Client) GetFuturesOrders(InstrumentId, state string, optionalParams map[string]string) (map[string]interface{}, error) {
+	var ordersResult map[string]interface{}
 	params := NewParams()
 	params["state"] = state
 

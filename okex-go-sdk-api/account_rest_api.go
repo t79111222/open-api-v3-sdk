@@ -224,7 +224,7 @@ HTTP请求
 POST /api/account/v3/transfer
 */
 func (client *Client) PostAccountTransfer(
-	currency string, from, to string, amount string, optionalParams *map[string]interface{}) (*map[string]interface{}, error) {
+	currency string, from, to string, amount string, optionalParams *map[string]string) (*map[string]interface{}, error) {
 
 	r := map[string]interface{}{}
 

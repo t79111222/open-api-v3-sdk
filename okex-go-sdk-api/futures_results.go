@@ -97,9 +97,9 @@ type FuturesAccount struct {
 
 type FuturesMarkdown struct {
 	BizWarmTips
-	InstrumentId string  `json:"instrument_id"`
-	Timestamp    string  `json:"timestamp"`
-	MarkPrice    float32 `json:"mark_price"`
+	InstrumentId string `json:"instrument_id"`
+	Timestamp    string `json:"timestamp"`
+	MarkPrice    string `json:"mark_price"`
 }
 
 type FuturesFixedAccountInfo struct {
@@ -278,9 +278,9 @@ type FuturesInstrumentCurrenciesResult struct {
 }
 
 type FuturesInstrumentBookResult struct {
-	Asks      [][]float64 `json:"asks,string"`
-	Bids      [][]float64 `json:"bids,string"`
-	Timestamp string      `json:"timestamp"`
+	Asks      [][]string `json:"asks,string"`
+	Bids      [][]string `json:"bids,string"`
+	Timestamp string     `json:"timestamp"`
 }
 
 type FuturesInstrumentTickerResult struct {
@@ -333,9 +333,9 @@ type FuturesInstrumentLiquidationListResult struct {
 }
 
 type FuturesInstrumentLiquidationResult struct {
-	InstrumentId string  `json:"instrument_id"`
-	Price        float64 `json:"price"`
-	Size         int64   `json:"size"`
-	Loss         float64 `json:"loss"`
-	CreatedAt    string  `json:"created_at"`
+	InstrumentId string `json:"instrument_id"`
+	Price        string `json:"price"`
+	Size         string `json:"size"`
+	Loss         string `json:"loss"`
+	CreatedAt    string `json:"created_at"`
 }

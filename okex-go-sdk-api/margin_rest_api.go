@@ -29,8 +29,8 @@ func (client *Client) GetMarginAccounts() (*[]map[string]interface{}, error) {
 HTTP请求
 GET /api/margin/v3/accounts/<instrument_id>
 */
-func (client *Client) GetMarginAccountsByInstrument(instrumentId string) (*[]map[string]interface{}, error) {
-	r := []map[string]interface{}{}
+func (client *Client) GetMarginAccountsByInstrument(instrumentId string) (*map[string]interface{}, error) {
+	r := map[string]interface{}{}
 
 	uri := GetInstrumentIdUri(MARGIN_ACCOUNTS_INSTRUMENT, instrumentId)
 	if _, err := client.Request(GET, uri, nil, &r); err != nil {

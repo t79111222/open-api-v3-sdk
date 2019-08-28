@@ -38,11 +38,16 @@ func GetDefaultConfig() *Config {
 	//config.SecretKey = "5197AFD043D7B86FDADF912A47FDED22"
 
 	// flt. 20190306. For margin restful api env only
-	config.Endpoint = "http://192.168.80.118:8814/"
-	config.ApiKey = "44dc343e-b32e-4fe3-a5ae-fb6725d2624e"
-	config.SecretKey = "DEA612A82517408108D350A6337CCBBE"
+	//config.Endpoint = "http://192.168.80.118:8814/"
+	//config.ApiKey = "44dc343e-b32e-4fe3-a5ae-fb6725d2624e"
+	//config.SecretKey = "DEA612A82517408108D350A6337CCBBE"
 
-	config.Passphrase = "123456"
+	// flt. 20190822. For latest version changed api. www.okex.com is binded to 149.129.82.222
+	config.Endpoint = "https://www.okex.com/"
+	config.ApiKey = "06cf0e5d-b960-48de-9947-d28fce183c13"
+	config.SecretKey = "38A0342FABAC02ED739535119C2DC459"
+
+	config.Passphrase = "654321"
 	config.TimeoutSecond = 45
 	config.IsPrint = true
 	config.I18n = ENGLISH

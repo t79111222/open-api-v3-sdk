@@ -168,7 +168,7 @@ func TestArray(t *testing.T) {
 	println(len(t2), r2)
 	println(len(t3), r3)
 
-	fmt.Printf("%+v", t1[0:len(t1)-1])
+	fmt.Printf("%+v\n", t1[0:len(t1)-1])
 }
 
 func TestCrc32(t *testing.T) {

@@ -11,8 +11,8 @@ HTTP请求
 GET /api/spot/v3/accounts
 
 */
-func (client *Client) GetSpotAccounts() (*[]map[string]interface{}, error) {
-	r := []map[string]interface{}{}
+func (client *Client) GetSpotAccounts() (*[]map[string]string, error) {
+	r := []map[string]string{}
 
 	if _, err := client.Request(GET, SPOT_ACCOUNTS, nil, &r); err != nil {
 		return nil, err
@@ -182,8 +182,8 @@ func (client *Client) GetSpotFills(order_id, instrument_id string, options *map[
 HTTP请求
 GET /api/spot/v3/instruments
 */
-func (client *Client) GetSpotInstruments() (*[]map[string]interface{}, error) {
-	r := []map[string]interface{}{}
+func (client *Client) GetSpotInstruments() (*[]map[string]string, error) {
+	r := []map[string]string{}
 
 	if _, err := client.Request(GET, SPOT_INSTRUMENTS, nil, &r); err != nil {
 		return nil, err
@@ -320,9 +320,10 @@ func (client *Client) PostSpotOrders(side, instrument_id string, optionalOrderIn
 	postParams["instrument_id"] = instrument_id
 
 	if optionalOrderInfo != nil && len(*optionalOrderInfo) > 0 {
-		postParams["client_oid"] = (*optionalOrderInfo)["client_oid"]
-		postParams["type"] = (*optionalOrderInfo)["type"]
-		postParams["margin_trading"] = (*optionalOrderInfo)["margin_trading"]
+
+		for k, v := range *optionalOrderInfo {
+			postParams[k] = v
+		}
 
 		if postParams["type"] == "limit" {
 			postParams["price"] = (*optionalOrderInfo)["price"]
