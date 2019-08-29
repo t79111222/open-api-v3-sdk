@@ -18,6 +18,12 @@ func GetDefaultConfig() *Config {
 	config.ApiKey = "dffdc0f1-b1e0-462c-bb9c-68eb2d511c2e"
 	config.SecretKey = "4DCAC40E3D01BA8AC76AA01583269669"
 
+	config.TimeoutSecond = 45
+	config.IsPrint = true
+	config.I18n = ENGLISH
+
+	config.WSEndpoint = "wss://real.okex.com:8443/ws/v3"
+
 	////
 	////// flt. 20190225.
 	////// For future test env only. coinmainweb.new.docker.okex.com --> 192.168.80.97
@@ -44,15 +50,11 @@ func GetDefaultConfig() *Config {
 
 	// flt. 20190822. For latest version changed api. www.okex.com is binded to 149.129.82.222
 	config.Endpoint = "https://www.okex.com/"
+
+	// set your own ApiKey, SecretKey, Passphrase here
 	config.ApiKey = "06cf0e5d-b960-48de-9947-d28fce183c13"
 	config.SecretKey = "38A0342FABAC02ED739535119C2DC459"
-
-	config.Passphrase = "654321"
-	config.TimeoutSecond = 45
-	config.IsPrint = true
-	config.I18n = ENGLISH
-
-	config.WSEndpoint = "wss://real.okex.com:8443/ws/v3"
+	config.Passphrase = ""
 
 	return &config
 }
