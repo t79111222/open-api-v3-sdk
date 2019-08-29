@@ -298,17 +298,24 @@ func (a *OKWSAgent) receive() {
 			er := rsp.(*WSEventResponse)
 			a.wsEvtCh <- er
 		case *WSDepthTableResponse:
-
+			var err error
 			dtr := rsp.(*WSDepthTableResponse)
 			hotDepths := a.hotDepthsMap[dtr.Table]
 			if hotDepths == nil {
 				hotDepths = NewWSHotDepths(dtr.Table)
-				hotDepths.loadWSDepthTableResponse(dtr)
-				a.hotDepthsMap[dtr.Table] = hotDepths
+				err = hotDepths.loadWSDepthTableResponse(dtr)
+				if err == nil {
+					a.hotDepthsMap[dtr.Table] = hotDepths
+				}
 			} else {
-				hotDepths.loadWSDepthTableResponse(dtr)
+				err = hotDepths.loadWSDepthTableResponse(dtr)
 			}
-			a.wsTbCh <- dtr
+
+			if err == nil {
+				a.wsTbCh <- dtr
+			} else {
+				log.Printf("Failed to loadWSDepthTableResponse, dtr: %+v, err: %+v", dtr, err)
+			}
 
 		case *WSTableResponse:
 			tb := rsp.(*WSTableResponse)
