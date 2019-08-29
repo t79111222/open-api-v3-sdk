@@ -24,6 +24,7 @@ func TestOKWSAgent_AllInOne(t *testing.T) {
 
 	// Step2: Subscribe channel
 	// Step2.0: Subscribe public channel swap/ticker successfully.
+	agent.Subscribe(CHNL_SWAP_TICKER, "BTC-USD-SWAP", nil)
 	agent.Subscribe(CHNL_SWAP_TICKER, "BTC-USD-SWAP", DefaultDataCallBack)
 
 	// Step2.1: Subscribe private channel swap/position before login, so it would be a fail.

@@ -91,7 +91,7 @@ type WSEventResponse struct {
 }
 
 func (r *WSEventResponse) Valid() bool {
-	return len(r.Event) > 0 && len(r.Channel) > 0
+	return (len(r.Event) > 0 && len(r.Channel) > 0) || r.Event == "login"
 }
 
 type WSTableResponse struct {
