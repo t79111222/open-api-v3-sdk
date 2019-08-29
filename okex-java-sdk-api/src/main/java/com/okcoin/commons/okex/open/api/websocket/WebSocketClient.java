@@ -243,5 +243,9 @@ public class WebSocketClient implements WebSocket {
         this.send("ping");
     }
 
+    public void closeTimer() {
+        this.timer.stop();
+    }
+
 
 }
