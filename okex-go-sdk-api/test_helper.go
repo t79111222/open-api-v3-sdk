@@ -52,6 +52,8 @@ func GetDefaultConfig() *Config {
 	config.IsPrint = true
 	config.I18n = ENGLISH
 
+	config.WSEndpoint = "wss://real.okex.com:8443/ws/v3"
+
 	return &config
 }
 

@@ -51,7 +51,7 @@ func TestGetFuturesInstrumentsCurrencies(t *testing.T) {
 }
 
 func TestGetFuturesInstrumentBook(t *testing.T) {
-	insId := getValidInstrumentId()
+	insId := getValidFutureInstrumentId()
 	book, err := NewTestClient().GetFuturesInstrumentBook(insId, nil)
 	if err != nil {
 		t.Error(err)
@@ -63,7 +63,7 @@ func TestGetFuturesInstrumentBook2(t *testing.T) {
 	params := NewParams()
 	params["size"] = "10"
 	params["depth"] = "0.1"
-	insId := getValidInstrumentId()
+	insId := getValidFutureInstrumentId()
 	r, err := NewTestClient().GetFuturesInstrumentBook(insId, nil)
 
 	simpleAssertTrue(r, err, t, false)
@@ -111,7 +111,7 @@ func TestGetFuturesInstrumentCandles(t *testing.T) {
 	//optional["end"] = end
 	optional["granularity"] = Int2String(granularity)
 
-	insId := getValidInstrumentId()
+	insId := getValidFutureInstrumentId()
 
 	candles, err := NewTestClient().GetFuturesInstrumentCandles(insId, optional)
 	if err != nil {
@@ -273,7 +273,7 @@ func TestGetFuturesAccountsLedgerByCurrency(t *testing.T) {
 
 func TestGetFuturesAccountsHoldsByInstrumentId(t *testing.T) {
 
-	instId := getValidInstrumentId()
+	instId := getValidFutureInstrumentId()
 	holds, err := NewTestClient().GetFuturesAccountsHoldsByInstrumentId(instId)
 	if err != nil {
 		t.Error(err)
@@ -283,7 +283,7 @@ func TestGetFuturesAccountsHoldsByInstrumentId(t *testing.T) {
 
 func TestFuturesOrder(t *testing.T) {
 	clientOid := "od12345678"
-	instId := getValidInstrumentId()
+	instId := getValidFutureInstrumentId()
 	result, err := NewTestClient().GetFuturesOrder(instId, clientOid)
 	if err != nil {
 		t.Error(err)
@@ -324,7 +324,7 @@ func TestGetFuturesOrders(t *testing.T) {
 	//optionals["after"] = "0"
 	optionals["limit"] = "10"
 
-	instId := getValidInstrumentId()
+	instId := getValidFutureInstrumentId()
 	orderList, err := NewTestClient().GetFuturesOrders(instId, state, optionals)
 	if err != nil {
 		t.Error(err)
@@ -337,7 +337,7 @@ func TestGetFuturesOrders(t *testing.T) {
 
 func TestGetFuturesOrder(t *testing.T) {
 	orderId := "1713584667466752"
-	instId := getValidInstrumentId()
+	instId := getValidFutureInstrumentId()
 	order, err := NewTestClient().GetFuturesOrder(instId, orderId)
 	if err != nil {
 		t.Error(err)
@@ -355,7 +355,7 @@ func TestBatchCancelFuturesInstrumentOrders(t *testing.T) {
 		t.Error(err)
 	}
 
-	instId := getValidInstrumentId()
+	instId := getValidFutureInstrumentId()
 	result, err := NewTestClient().BatchCancelFuturesInstrumentOrders(instId, json)
 	if err != nil {
 		t.Error(err)
@@ -365,7 +365,7 @@ func TestBatchCancelFuturesInstrumentOrders(t *testing.T) {
 
 func TestCancelFuturesInstrumentOrder(t *testing.T) {
 	orderId := "1713484063611904"
-	instId := getValidInstrumentId()
+	instId := getValidFutureInstrumentId()
 
 	result, err := NewTestClient().CancelFuturesInstrumentOrder(instId, orderId)
 	require.True(t, err == nil, err)
@@ -380,7 +380,7 @@ func TestGetFuturesFills(t *testing.T) {
 	optionals["to"] = to
 	optionals["limit"] = limit
 
-	instId := getValidInstrumentId()
+	instId := getValidFutureInstrumentId()
 
 	result, err := NewTestClient().GetFuturesFills(instId, orderId, optionals)
 	if err != nil {
@@ -389,7 +389,7 @@ func TestGetFuturesFills(t *testing.T) {
 	FmtPrintln("Futures Instrument fills: ", result)
 }
 
-func getValidInstrumentId() string {
+func getValidFutureInstrumentId() string {
 	c := NewTestClient()
 	insList, err := c.GetFuturesInstruments()
 	if err == nil {
@@ -400,7 +400,7 @@ func getValidInstrumentId() string {
 }
 
 func TestGetInstrumentMarkPrice(t *testing.T) {
-	insId := getValidInstrumentId()
+	insId := getValidFutureInstrumentId()
 	r, e := NewTestClient().GetInstrumentMarkPrice(insId)
 	simpleAssertTrue(r, e, t, false)
 	assert.True(t, r.Code == 0)
@@ -426,8 +426,31 @@ func TestFuturesAccountsLeverage(t *testing.T) {
 
 	// Post C2. One Position
 	params := NewParams()
-	params["instrument_id"] = getValidInstrumentId()
+	params["instrument_id"] = getValidFutureInstrumentId()
 	params["direction"] = "long"
 	r, e = c.PostFuturesAccountsLeverage(currency, "10", params)
 	simpleAssertTrue(r, e, t, false)
+}
+
+// lingting.fu@okcoin.com
+// The following requests might not success becoz of risk and considered as "Bad Request"
+func TestPostFuturesAPI(t *testing.T) {
+	c := NewTestClient()
+	r, _ := c.PostFutureAccountsLiquiMode("btc", "tier")
+	fmt.Printf("%+v \n", r)
+
+	r, _ = c.PostFutureAccountsMarginMode("btc", "crossed")
+	fmt.Printf("%+v \n", r)
+
+	validInstId := getValidFutureInstrumentId()
+	r, _ = c.PostFuturesOrder(validInstId, "1", "1.1", "1", nil)
+	fmt.Printf("%+v \n", r)
+
+	orderDatas := []map[string]string{
+		map[string]string{"order_type": "0", "price": "5", "size": "2", "type": "1", "match_price": "1"},
+		map[string]string{"order_type": "0", "price": "2", "size": "3", "type": "1", "match_price": "1"},
+	}
+
+	r, _ = c.PostFuturesOrders(validInstId, orderDatas, "20", nil)
+	fmt.Printf("%+v \n", r)
 }

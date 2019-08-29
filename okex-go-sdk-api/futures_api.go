@@ -201,12 +201,36 @@ func (client *Client) GetFuturesAccountsHoldsByInstrumentId(InstrumentId string)
 }
 
 /*
- Create a new order
+
+下单
+OKEx合约交易提供了限价单下单模式。只有当您的账户有足够的资金才能下单。一旦下单，您的账户资金将在订单生命周期内被冻结。被冻结的资金以及数量取决于订单指定的类型和参数。
+
+限速规则：40次/2s
+HTTP请求
+POST /api/futures/v3/order
+
+请求示例
+POST/api/futures/v3/order
+{"client_oid": “12233456”,"order_type”:”1”,"instrument_id":"BTC-USD-180213","type":"1","price":"432.11","size":"2","match_price":"0","leverage":"10"}
+
 */
-func (client *Client) PostFuturesOrder(newOrderParams FuturesNewOrderParams) (FuturesNewOrderResult, error) {
-	var newOrderResult FuturesNewOrderResult
-	_, err := client.Request(POST, FUTURES_ORDER, newOrderParams, &newOrderResult)
-	return newOrderResult, err
+func (client *Client) PostFuturesOrder(instrumentId, oType, price, size string, optionalParams map[string]string) (*map[string]interface{}, error) {
+	r := map[string]interface{}{}
+
+	params := NewParams()
+	params["instrument_id"] = instrumentId
+	params["type"] = oType
+	params["price"] = price
+	params["size"] = size
+
+	if optionalParams != nil && len(optionalParams) > 0 {
+		for k, v := range optionalParams {
+			params[k] = v
+		}
+	}
+
+	_, err := client.Request(POST, FUTURES_ORDER, params, &r)
+	return &r, err
 }
 
 /*
@@ -275,80 +299,80 @@ func (c *Client) GetInstrumentMarkPrice(instrumentId string) (*FuturesMarkdown, 
 	return &r, err
 }
 
-func parsePositions(response *http.Response, err error) (FuturesPosition, error) {
-	var position FuturesPosition
-	if err != nil {
-		return position, err
-	}
-	var result Result
-	result.Result = false
-	jsonString := GetResponseDataJsonString(response)
-	if strings.Contains(jsonString, "\"margin_mode\":\"fixed\"") {
-		var fixedPosition FuturesFixedPosition
-		err = JsonString2Struct(jsonString, &fixedPosition)
-		if err != nil {
-			return position, err
-		} else {
-			position.Result = fixedPosition.Result
-			position.MarginMode = fixedPosition.MarginMode
-			position.FixedPosition = fixedPosition.FixedPosition
-		}
-	} else if strings.Contains(jsonString, "\"margin_mode\":\"crossed\"") {
-		var crossPosition FuturesCrossPosition
-		err = JsonString2Struct(jsonString, &crossPosition)
-		if err != nil {
-			return position, err
-		} else {
-			position.Result = crossPosition.Result
-			position.MarginMode = crossPosition.MarginMode
-			position.CrossPosition = crossPosition.CrossPosition
-		}
-	} else if strings.Contains(jsonString, "\"code\":") {
-		JsonString2Struct(jsonString, &position)
-		position.Result = result
-	} else {
-		position.Result = result
-	}
-
-	return position, nil
-}
-
-func parseAccounts(response *http.Response, err error) (FuturesAccount, error) {
-	var account FuturesAccount
-	if err != nil {
-		return account, err
-	}
-	var result Result
-	result.Result = false
-	jsonString := GetResponseDataJsonString(response)
-	if strings.Contains(jsonString, "\"contracts\"") {
-		var fixedAccount FuturesFixedAccountInfo
-		err = JsonString2Struct(jsonString, &fixedAccount)
-		if err != nil {
-			return account, err
-		} else {
-			account.Result = fixedAccount.Result
-			account.FixedAccount = fixedAccount.Info
-			account.MarginMode = "fixed"
-		}
-	} else if strings.Contains(jsonString, "\"realized_pnl\"") {
-		var crossAccount FuturesCrossAccountInfo
-		err = JsonString2Struct(jsonString, &crossAccount)
-		if err != nil {
-			return account, err
-		} else {
-			account.Result = crossAccount.Result
-			account.MarginMode = "crossed"
-			account.CrossAccount = crossAccount.Info
-		}
-	} else if strings.Contains(jsonString, "\"code\":") {
-		JsonString2Struct(jsonString, &account)
-		account.Result = result
-	} else {
-		account.Result = result
-	}
-	return account, nil
-}
+//func parsePositions(response *http.Response, err error) (FuturesPosition, error) {
+//	var position FuturesPosition
+//	if err != nil {
+//		return position, err
+//	}
+//	var result Result
+//	result.Result = false
+//	jsonString := GetResponseDataJsonString(response)
+//	if strings.Contains(jsonString, "\"margin_mode\":\"fixed\"") {
+//		var fixedPosition FuturesFixedPosition
+//		err = JsonString2Struct(jsonString, &fixedPosition)
+//		if err != nil {
+//			return position, err
+//		} else {
+//			position.Result = fixedPosition.Result
+//			position.MarginMode = fixedPosition.MarginMode
+//			position.FixedPosition = fixedPosition.FixedPosition
+//		}
+//	} else if strings.Contains(jsonString, "\"margin_mode\":\"crossed\"") {
+//		var crossPosition FuturesCrossPosition
+//		err = JsonString2Struct(jsonString, &crossPosition)
+//		if err != nil {
+//			return position, err
+//		} else {
+//			position.Result = crossPosition.Result
+//			position.MarginMode = crossPosition.MarginMode
+//			position.CrossPosition = crossPosition.CrossPosition
+//		}
+//	} else if strings.Contains(jsonString, "\"code\":") {
+//		JsonString2Struct(jsonString, &position)
+//		position.Result = result
+//	} else {
+//		position.Result = result
+//	}
+//
+//	return position, nil
+//}
+//
+//func parseAccounts(response *http.Response, err error) (FuturesAccount, error) {
+//	var account FuturesAccount
+//	if err != nil {
+//		return account, err
+//	}
+//	var result Result
+//	result.Result = false
+//	jsonString := GetResponseDataJsonString(response)
+//	if strings.Contains(jsonString, "\"contracts\"") {
+//		var fixedAccount FuturesFixedAccountInfo
+//		err = JsonString2Struct(jsonString, &fixedAccount)
+//		if err != nil {
+//			return account, err
+//		} else {
+//			account.Result = fixedAccount.Result
+//			account.FixedAccount = fixedAccount.Info
+//			account.MarginMode = "fixed"
+//		}
+//	} else if strings.Contains(jsonString, "\"realized_pnl\"") {
+//		var crossAccount FuturesCrossAccountInfo
+//		err = JsonString2Struct(jsonString, &crossAccount)
+//		if err != nil {
+//			return account, err
+//		} else {
+//			account.Result = crossAccount.Result
+//			account.MarginMode = "crossed"
+//			account.CrossAccount = crossAccount.Info
+//		}
+//	} else if strings.Contains(jsonString, "\"code\":") {
+//		JsonString2Struct(jsonString, &account)
+//		account.Result = result
+//	} else {
+//		account.Result = result
+//	}
+//	return account, nil
+//}
 
 func parseCurrencyAccounts(response *http.Response, err error) (FuturesCurrencyAccount, error) {
 	var currencyAccount FuturesCurrencyAccount

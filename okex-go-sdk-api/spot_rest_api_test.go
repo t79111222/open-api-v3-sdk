@@ -140,19 +140,11 @@ func TestPostSpotOrders(t *testing.T) {
 	optionals["size"] = "0.01"
 
 	r, err = c.PostSpotOrders("buy", instId, &optionals)
+	fmt.Printf("%+v %+v \n", r, err)
 
-	//
-	if err == nil && (*r)["error_code"] == "" {
-		require.True(t, r != nil, r)
-
-		// Case3: Cancel posted order.
-		orderId := (*r)["order_id"].(string)
-		r, err = c.PostSpotCancelOrders(instId, orderId)
-		assert.True(t, r != nil && err == nil)
-		jstr, _ = Struct2JsonString(r)
-		println(jstr)
-
-	}
+	// Case3: Cancel posted order.
+	r, err = c.PostSpotCancelOrders(instId, "fake_order_id")
+	fmt.Printf("%+v %+v \n", r, err)
 
 }
 
@@ -188,7 +180,15 @@ func TestGetSpotOrders(t *testing.T) {
 	acc := getFirstValidSpotInstrument()
 	currency := acc["currency"]
 
-	c.GetSpotOrders("filled", currency, nil)
+	r, e := c.GetSpotOrders("filled", currency, nil)
+	fmt.Printf("%+v %+v \n", r, e)
+
+	sf, e := c.GetSpotFills("fake_order_id", acc["instrument_id"], nil)
+	fmt.Printf("%+v %+v \n", sf, e)
+
+	ib, e := c.GetSpotInstrumentBook(acc["instrument_id"], nil)
+	fmt.Printf("%+v %+v \n", ib, e)
+
 	//orders, err := c.GetSpotOrders("filled", currency, nil)
 	//require.True(t, err == nil, err)
 	//jstr, _ := Struct2JsonString(orders)
@@ -222,9 +222,7 @@ func TestGetSpotOrdersPending(t *testing.T) {
 	jstr, _ = Struct2JsonString(ac)
 	println(jstr)
 
-	if ac != nil && len(*ac) > 0 {
-		testOrderId := (*ac)[0].(map[string]string)["order_id"]
-		so, err := c.GetSpotOrdersById(instId, testOrderId)
-		assert.True(t, so != nil && err == nil)
-	}
+	testOrderId := "a_random_id"
+	so, err := c.GetSpotOrdersById(instId, testOrderId)
+	fmt.Printf("%+v %+v \n", so, err)
 }
