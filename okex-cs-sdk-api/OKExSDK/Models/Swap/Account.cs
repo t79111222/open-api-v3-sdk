@@ -9,11 +9,11 @@ namespace OKExSDK.Models.Swap
         /// <summary>
         /// 账户权益
         /// </summary>
-        public string equity { get; set; }
+        public decimal equity { get; set; }
         /// <summary>
         /// 账户余额
         /// </summary>
-        public string total_avail_balance { get; set; }
+        public decimal total_avail_balance { get; set; }
         /// <summary>
         /// 已用保证金
         /// </summary>

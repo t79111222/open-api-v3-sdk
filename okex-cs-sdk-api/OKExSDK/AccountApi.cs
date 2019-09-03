@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OKExSDK.Models.Account;
+using OKExSDK.Models.Error;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -18,7 +19,7 @@ namespace OKExSDK
         /// 获取币种列表
         /// </summary>
         /// <returns>币种列表</returns>
-        public async Task<JContainer> getCurrenciesAsync()
+        public async Task<List<Currency>> getCurrenciesAsync()
         {
             var url = $"{this.BASEURL}{this.ACCOUNT_SEGMENT}/currencies";
 
@@ -29,9 +30,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<Currency>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -39,7 +46,7 @@ namespace OKExSDK
         /// 钱包账户信息
         /// </summary>
         /// <returns>钱包列表</returns>
-        public async Task<JContainer> getWalletInfoAsync()
+        public async Task<List<Wallet>> getWalletInfoAsync()
         {
             var url = $"{this.BASEURL}{this.ACCOUNT_SEGMENT}/wallet";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -48,9 +55,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<Wallet>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -59,7 +72,7 @@ namespace OKExSDK
         /// </summary>
         /// <param name="currency">币种，如：btc</param>
         /// <returns></returns>
-        public async Task<JContainer> getWalletInfoByCurrencyAsync(string currency)
+        public async Task<List<Wallet>> getWalletInfoByCurrencyAsync(string currency)
         {
             var url = $"{this.BASEURL}{this.ACCOUNT_SEGMENT}/wallet/{currency}";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -68,9 +81,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<Wallet>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -79,7 +98,7 @@ namespace OKExSDK
         /// </summary>
         /// <param name="transfer">划转信息</param>
         /// <returns></returns>
-        public async Task<JObject> makeTransferAsync(Transfer transfer)
+        public async Task<TransferResult> makeTransferAsync(Transfer transfer)
         {
             var url = $"{this.BASEURL}{this.ACCOUNT_SEGMENT}/transfer";
             var bodyStr = JsonConvert.SerializeObject(transfer);
@@ -87,7 +106,8 @@ namespace OKExSDK
             {
                 var res = await client.PostAsync(url, new StringContent(bodyStr, Encoding.UTF8, "application/json"));
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<TransferResult>(contentStr);
+                return result;
             }
         }
 
@@ -96,7 +116,7 @@ namespace OKExSDK
         /// </summary>
         /// <param name="withDraw">提币信息</param>
         /// <returns></returns>
-        public async Task<JObject> makeWithDrawalAsync(WithDrawal withDraw)
+        public async Task<WithDrawalResult> makeWithDrawalAsync(WithDrawal withDraw)
         {
             var url = $"{this.BASEURL}{this.ACCOUNT_SEGMENT}/withdrawal";
             var bodyStr = JsonConvert.SerializeObject(withDraw);
@@ -104,7 +124,8 @@ namespace OKExSDK
             {
                 var res = await client.PostAsync(url, new StringContent(bodyStr, Encoding.UTF8, "application/json"));
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<WithDrawalResult>(contentStr);
+                return result;
             }
         }
 
@@ -113,7 +134,7 @@ namespace OKExSDK
         /// </summary>
         /// <param name="currency">币种</param>
         /// <returns></returns>
-        public async Task<JContainer> getWithDrawalFeeAsync(string currency)
+        public async Task<List<WithdrawalFee>> getWithDrawalFeeAsync(string currency)
         {
             var url = $"{this.BASEURL}{this.ACCOUNT_SEGMENT}/withdrawal/fee";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -129,9 +150,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<WithdrawalFee>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -139,7 +166,7 @@ namespace OKExSDK
         /// 查询最近所有币种的提币记录
         /// </summary>
         /// <returns></returns>
-        public async Task<JContainer> getWithDrawalHistoryAsync()
+        public async Task<List<WithDrawalHistory>> getWithDrawalHistoryAsync()
         {
             var url = $"{this.BASEURL}{this.ACCOUNT_SEGMENT}/withdrawal/history";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -148,9 +175,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<WithDrawalHistory>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -159,7 +192,7 @@ namespace OKExSDK
         /// </summary>
         /// <param name="currency">币种</param>
         /// <returns></returns>
-        public async Task<JContainer> getWithDrawalHistoryByCurrencyAsync(string currency)
+        public async Task<List<WithDrawalHistory>> getWithDrawalHistoryByCurrencyAsync(string currency)
         {
             var url = $"{this.BASEURL}{this.ACCOUNT_SEGMENT}/withdrawal/history/{currency}";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -168,9 +201,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<WithDrawalHistory>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -183,7 +222,7 @@ namespace OKExSDK
         /// <param name="to">请求此页码之前的分页内容（举例页码为：1，2，3，4，5。from 4 只返回第5页，to 4只返回第3页）</param>
         /// <param name="limit">分页返回的结果集数量，默认为100，最大为100，按时间顺序排列，越早下单的在前面</param>
         /// <returns></returns>
-        public async Task<JContainer> getLedgerAsync(string currency, string type, int? from, int? to, int? limit)
+        public async Task<List<AccountLedger>> getLedgerAsync(string currency, string type, int? from, int? to, int? limit)
         {
             var url = $"{this.BASEURL}{this.ACCOUNT_SEGMENT}/ledger";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -215,9 +254,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<AccountLedger>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -226,7 +271,7 @@ namespace OKExSDK
         /// </summary>
         /// <param name="currency">币种</param>
         /// <returns></returns>
-        public async Task<JContainer> getDepositAddressAsync(string currency)
+        public async Task<List<DepositAddress>> getDepositAddressAsync(string currency)
         {
             var url = $"{this.BASEURL}{this.ACCOUNT_SEGMENT}/deposit/address";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -242,9 +287,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<DepositAddress>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -252,7 +303,7 @@ namespace OKExSDK
         /// 获取所有币种充值记录
         /// </summary>
         /// <returns></returns>
-        public async Task<JContainer> getDepositHistoryAsync()
+        public async Task<List<DepositHistory>> getDepositHistoryAsync()
         {
             var url = $"{this.BASEURL}{this.ACCOUNT_SEGMENT}/deposit/history";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -261,9 +312,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<DepositHistory>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -272,7 +329,7 @@ namespace OKExSDK
         /// </summary>
         /// <param name="currency">币种</param>
         /// <returns></returns>
-        public async Task<JContainer> getDepositHistoryByCurrencyAsync(string currency)
+        public async Task<List<DepositHistory>> getDepositHistoryByCurrencyAsync(string currency)
         {
             var url = $"{this.BASEURL}{this.ACCOUNT_SEGMENT}/deposit/history/{currency}";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -281,9 +338,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<DepositHistory>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 

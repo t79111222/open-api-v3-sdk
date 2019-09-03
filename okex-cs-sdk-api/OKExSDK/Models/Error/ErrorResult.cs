@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace OKExSDK.Models
+namespace OKExSDK.Models.Error
 {
     public class ErrorResult
     {

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using OKExSDK.Models.Error;
 using OKExSDK.Models.Swap;
 using System;
 using System.Collections.Generic;
@@ -27,14 +28,15 @@ namespace OKExSDK
         /// </summary>
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <returns></returns>
-        public async Task<JObject> getPositionByInstrumentAsync(string instrument_id)
+        public async Task<Position> getPositionByInstrumentAsync(string instrument_id)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/{instrument_id}/position";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
             {
                 var res = await client.GetAsync(url);
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<Position>(contentStr);
+                return result ;
             }
         }
 
@@ -42,14 +44,15 @@ namespace OKExSDK
         /// 所有币种合约账户信息
         /// </summary>
         /// <returns></returns>
-        public async Task<JObject> getAccountsAsync()
+        public async Task<AccountsResult> getAccountsAsync()
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/accounts";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
             {
                 var res = await client.GetAsync(url);
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<AccountsResult>(contentStr);
+                return result;
             }
         }
 
@@ -58,14 +61,15 @@ namespace OKExSDK
         /// </summary>
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <returns></returns>
-        public async Task<JObject> getAccountsByInstrumentAsync(string instrument_id)
+        public async Task<AccountResult> getAccountsByInstrumentAsync(string instrument_id)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/{instrument_id}/accounts";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
             {
                 var res = await client.GetAsync(url);
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<AccountResult>(contentStr);
+                return result;
             }
         }
 
@@ -74,14 +78,15 @@ namespace OKExSDK
         /// </summary>
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <returns></returns>
-        public async Task<JObject> getSettingsByInstrumentAsync(string instrument_id)
+        public async Task<Leverage> getSettingsByInstrumentAsync(string instrument_id)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/accounts/{instrument_id}/settings";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
             {
                 var res = await client.GetAsync(url);
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<Leverage>(contentStr);
+                return result;
             }
         }
 
@@ -92,7 +97,7 @@ namespace OKExSDK
         /// <param name="leverage">新杠杆倍数，可填写1-40之间的整数</param>
         /// <param name="side">方向:1.LONG 2.SHORT 3.CROSS</param>
         /// <returns></returns>
-        public async Task<JObject> setLeverageByInstrumentAsync(string instrument_id, int leverage, string side)
+        public async Task<Leverage> setLeverageByInstrumentAsync(string instrument_id, int leverage, string side)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/accounts/{instrument_id}/leverage";
             var body = new { leverage = leverage, side = side };
@@ -101,7 +106,8 @@ namespace OKExSDK
             {
                 var res = await client.PostAsync(url, new StringContent(bodyStr, Encoding.UTF8, "application/json"));
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<Leverage>(contentStr);
+                return result;
             }
         }
 
@@ -113,7 +119,7 @@ namespace OKExSDK
         /// <param name="to">分页游标截至</param>
         /// <param name="limit">分页数据数量，默认100</param>
         /// <returns></returns>
-        public async Task<JContainer> getLedgersByInstrumentAsync(string instrument_id, int? from, int? to, int? limit)
+        public async Task<List<Ledger>> getLedgersByInstrumentAsync(string instrument_id, int? from, int? to, int? limit)//List<Ledger>
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/accounts/{instrument_id}/ledger";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -137,9 +143,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<Ledger>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -153,7 +165,7 @@ namespace OKExSDK
         /// <param name="client_oid">由您设置的订单ID来识别您的订单</param>
         /// <param name="match_price">是否以对手价下单(0:不是 1:是)</param>
         /// <returns></returns>
-        public async Task<JObject> makeOrderAsync(string instrument_id, string type, decimal price, int size, string client_oid, string match_price)
+        public async Task<OrderResultSingle> makeOrderAsync(string instrument_id, string type, decimal price, int size, string client_oid, string match_price)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/order";
             var body = new
@@ -169,8 +181,9 @@ namespace OKExSDK
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, bodyStr)))
             {
                 var res = await client.PostAsync(url, new StringContent(bodyStr, Encoding.UTF8, "application/json"));
-                var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var contentStr = await res.Content.ReadAsStringAsync(); 
+                var result = ToObject<OrderResultSingle>(contentStr);
+                return result;
             }
         }
 
@@ -179,7 +192,7 @@ namespace OKExSDK
         /// </summary>
         /// <param name="order">订单信息</param>
         /// <returns></returns>
-        public async Task<JObject> makeOrdersBatchAsync(OrderBatch order)
+        public async Task<OrderBatchResult> makeOrdersBatchAsync(OrderBatch order)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/orders";
             var bodyStr = JsonConvert.SerializeObject(order);
@@ -187,7 +200,8 @@ namespace OKExSDK
             {
                 var res = await client.PostAsync(url, new StringContent(bodyStr, Encoding.UTF8, "application/json"));
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<OrderBatchResult>(contentStr);
+                return result;
             }
         }
 
@@ -197,14 +211,15 @@ namespace OKExSDK
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <param name="order_id">订单id</param>
         /// <returns></returns>
-        public async Task<JObject> cancelOrderAsync(string instrument_id, string order_id)
+        public async Task<CancelOrderResult> cancelOrderAsync(string instrument_id, string order_id)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/cancel_order/{instrument_id}/{order_id}";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, "")))
             {
                 var res = await client.PostAsync(url, new StringContent("", Encoding.UTF8, "application/json"));
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<CancelOrderResult>(contentStr);
+                return result;
             }
         }
 
@@ -214,7 +229,7 @@ namespace OKExSDK
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <param name="orderIds">订单id列表</param>
         /// <returns></returns>
-        public async Task<JObject> cancelOrderBatchAsync(string instrument_id, List<string> orderIds)
+        public async Task<CancelOrderBatchResult> cancelOrderBatchAsync(string instrument_id, List<string> orderIds)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/cancel_batch_orders/{instrument_id}";
             var body = new { order_ids = orderIds };
@@ -223,7 +238,8 @@ namespace OKExSDK
             {
                 var res = await client.PostAsync(url, new StringContent(bodyStr, Encoding.UTF8, "application/json"));
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<CancelOrderBatchResult>(contentStr);
+                return result;
             }
         }
 
@@ -236,7 +252,7 @@ namespace OKExSDK
         /// <param name="to">分页游标截至</param>
         /// <param name="limit">分页数据数量，默认100</param>
         /// <returns></returns>
-        public async Task<JObject> getOrdersAsync(string instrument_id, string status, int? from, int? to, int? limit)
+        public async Task<OrderListResult> getOrdersAsync(string instrument_id, string status, int? from, int? to, int? limit)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/orders/{instrument_id}";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -259,7 +275,8 @@ namespace OKExSDK
                 var paramsStr = await encodedContent.ReadAsStringAsync();
                 var res = await client.GetAsync($"{url}?{paramsStr}");
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<OrderListResult>(contentStr);
+                return result;
             }
         }
 
@@ -269,14 +286,15 @@ namespace OKExSDK
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <param name="order_id">订单ID</param>
         /// <returns></returns>
-        public async Task<JObject> getOrderByIdAsync(string instrument_id, string order_id)
+        public async Task<Order> getOrderByIdAsync(string instrument_id, string order_id)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/orders/{instrument_id}/{order_id}";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
             {
                 var res = await client.GetAsync(url);
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<Order>(contentStr);
+                return result;
             }
         }
 
@@ -289,7 +307,7 @@ namespace OKExSDK
         /// <param name="to">分页游标截至</param>
         /// <param name="limit">分页数据数量，默认100</param>
         /// <returns></returns>
-        public async Task<JContainer> getFillsAsync(string instrument_id, string order_id, int? from, int? to, int? limit)
+        public async Task<List<Fill>> getFillsAsync(string instrument_id, string order_id, int? from, int? to, int? limit)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/fills";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -315,9 +333,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<Fill>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -325,7 +349,7 @@ namespace OKExSDK
         /// 获取合约信息
         /// </summary>
         /// <returns></returns>
-        public async Task<JContainer> getInstrumentsAsync()
+        public async Task<List<Instrument>> getInstrumentsAsync()
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/instruments";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -334,9 +358,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<Instrument>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -346,7 +376,7 @@ namespace OKExSDK
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <param name="size">返回深度数量，最大值可传200，即买卖深度共400条</param>
         /// <returns></returns>
-        public async Task<JObject> getBookAsync(string instrument_id, int? size)
+        public async Task<Depth> getBookAsync(string instrument_id, int? size)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/instruments/{instrument_id}/depth";
 
@@ -361,7 +391,8 @@ namespace OKExSDK
                 var paramsStr = await encodedContent.ReadAsStringAsync();
                 var res = await client.GetAsync($"{url}?{paramsStr}");
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<Depth>(contentStr);
+                return result;
             }
         }
 
@@ -369,7 +400,7 @@ namespace OKExSDK
         /// 获取全部ticker信息
         /// </summary>
         /// <returns></returns>
-        public async Task<JContainer> getTickersAsync()
+        public async Task<List<Ticker>> getTickersAsync()
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/instruments/ticker";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -378,9 +409,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<Ticker>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -389,14 +426,15 @@ namespace OKExSDK
         /// </summary>
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <returns></returns>
-        public async Task<JObject> getTickerByInstrumentId(string instrument_id)
+        public async Task<Ticker> getTickerByInstrumentId(string instrument_id)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/instruments/{instrument_id}/ticker";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
             {
                 var res = await client.GetAsync(url);
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<Ticker>(contentStr);
+                return result;
             }
         }
 
@@ -408,7 +446,7 @@ namespace OKExSDK
         /// <param name="to">分页游标截至</param>
         /// <param name="limit">分页数据数量，默认100</param>
         /// <returns></returns>
-        public async Task<JContainer> getTradesAsync(string instrument_id, int? from, int? to, int? limit)
+        public async Task<List<Trade>> getTradesAsync(string instrument_id, int? from, int? to, int? limit)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/instruments/{instrument_id}/trades";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -432,9 +470,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<Trade>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -446,7 +490,7 @@ namespace OKExSDK
         /// <param name="end">结束时间</param>
         /// <param name="granularity">时间粒度，以秒为单位，必须为60的倍数</param>
         /// <returns></returns>
-        public async Task<JContainer> getCandlesDataAsync(string instrument_id, DateTime? start, DateTime? end, int? granularity)
+        public async Task<List<List<decimal>>> getCandlesDataAsync(string instrument_id, DateTime? start, DateTime? end, int? granularity)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/instruments/{instrument_id}/candles";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
@@ -470,9 +514,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<List<decimal>>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -481,14 +531,15 @@ namespace OKExSDK
         /// </summary>
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <returns></returns>
-        public async Task<JObject> getIndexAsync(string instrument_id)
+        public async Task<Index> getIndexAsync(string instrument_id)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/instruments/{instrument_id}/index";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
             {
                 var res = await client.GetAsync(url);
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<Index>(contentStr);
+                return result;
             }
         }
 
@@ -496,14 +547,15 @@ namespace OKExSDK
         /// 获取法币汇率
         /// </summary>
         /// <returns></returns>
-        public async Task<JObject> getRateAsync()
+        public async Task<Rate> getRateAsync()
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/rate";
             using (var client = new HttpClient())
             {
                 var res = await client.GetAsync(url);
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<Rate>(contentStr);
+                return result;
             }
         }
 
@@ -512,14 +564,15 @@ namespace OKExSDK
         /// </summary>
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <returns></returns>
-        public async Task<JObject> getOpenInterestAsync(string instrument_id)
+        public async Task<OpenInterest> getOpenInterestAsync(string instrument_id)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/instruments/{instrument_id}/open_interest";
             using (var client = new HttpClient())
             {
                 var res = await client.GetAsync(url);
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<OpenInterest>(contentStr);
+                return result;
             }
         }
 
@@ -528,14 +581,15 @@ namespace OKExSDK
         /// </summary>
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <returns></returns>
-        public async Task<JObject> getPriceLimitAsync(string instrument_id)
+        public async Task<PriceLimit> getPriceLimitAsync(string instrument_id)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/instruments/{instrument_id}/price_limit";
             using (var client = new HttpClient())
             {
                 var res = await client.GetAsync(url);
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<PriceLimit>(contentStr);
+                return result;
             }
         }
 
@@ -548,7 +602,7 @@ namespace OKExSDK
         /// <param name="to">分页游标截至</param>
         /// <param name="limit">分页数据数量，默认100</param>
         /// <returns></returns>
-        public async Task<JContainer> getLiquidationAsync(string instrument_id, string status, int? from, int? to, int? limit)
+        public async Task<List<Liquidation>> getLiquidationAsync(string instrument_id, string status, int? from, int? to, int? limit)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/instruments/{instrument_id}/liquidation";
             using (var client = new HttpClient())
@@ -573,9 +627,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<Liquidation>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
 
@@ -584,14 +644,15 @@ namespace OKExSDK
         /// </summary>
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <returns></returns>
-        public async Task<JObject> getHoldsAsync(string instrument_id)
+        public async Task<Hold> getHoldsAsync(string instrument_id)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/accounts/{instrument_id}/holds";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
             {
                 var res = await client.GetAsync(url);
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<Hold>(contentStr);
+                return result;
             }
         }
 
@@ -600,14 +661,15 @@ namespace OKExSDK
         /// </summary>
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <returns></returns>
-        public async Task<JObject> getFundingTimeAsync(string instrument_id)
+        public async Task<FundingTime> getFundingTimeAsync(string instrument_id)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/instruments/{instrument_id}/funding_time";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
             {
                 var res = await client.GetAsync(url);
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<FundingTime>(contentStr);
+                return result;
             }
         }
 
@@ -616,14 +678,15 @@ namespace OKExSDK
         /// </summary>
         /// <param name="instrument_id">合约名称，如BTC-USD-SWAP</param>
         /// <returns></returns>
-        public async Task<JObject> getMarkPriceAsync(string instrument_id)
+        public async Task<MarkPrice> getMarkPriceAsync(string instrument_id)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/instruments/{instrument_id}/mark_price";
             using (var client = new HttpClient(new HttpInterceptor(this._apiKey, this._secret, this._passPhrase, null)))
             {
                 var res = await client.GetAsync(url);
                 var contentStr = await res.Content.ReadAsStringAsync();
-                return JObject.Parse(contentStr);
+                var result = ToObject<MarkPrice>(contentStr);
+                return result;
             }
         }
 
@@ -635,7 +698,7 @@ namespace OKExSDK
         /// <param name="to">分页游标截至</param>
         /// <param name="limit">分页数据数量，默认100</param>
         /// <returns></returns>
-        public async Task<JContainer> getHistoricalFundingRateAsync(string instrument_id, int? from, int? to, int? limit)
+        public async Task<List<HistoricalFundingRate>> getHistoricalFundingRateAsync(string instrument_id, int? from, int? to, int? limit)
         {
             var url = $"{this.BASEURL}{this.SWAP_SEGMENT}/instruments/{instrument_id}/historical_funding_rate";
             using (var client = new HttpClient())
@@ -659,9 +722,15 @@ namespace OKExSDK
                 var contentStr = await res.Content.ReadAsStringAsync();
                 if (contentStr[0] == '[')
                 {
-                    return JArray.Parse(contentStr);
+                    JContainer jContainer = JArray.Parse(contentStr);
+                    var result = ToList<HistoricalFundingRate>(contentStr);
+                    return result;
                 }
-                return JObject.Parse(contentStr);
+                else
+                {
+                    var result = ToObject<ErrorResult>(contentStr);
+                    throw new OKExException("Can't parse to list. json string = " + contentStr);
+                }
             }
         }
     }
