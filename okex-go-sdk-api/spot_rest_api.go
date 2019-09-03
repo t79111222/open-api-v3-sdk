@@ -11,8 +11,8 @@ HTTP请求
 GET /api/spot/v3/accounts
 
 */
-func (client *Client) GetSpotAccounts() (*[]map[string]interface{}, error) {
-	r := []map[string]interface{}{}
+func (client *Client) GetSpotAccounts() (*[]map[string]string, error) {
+	r := []map[string]string{}
 
 	if _, err := client.Request(GET, SPOT_ACCOUNTS, nil, &r); err != nil {
 		return nil, err
@@ -69,15 +69,15 @@ func (client *Client) GetSpotAccountsCurrencyLeger(currency string, optionalPara
 HTTP请求
 GET /api/spot/v3/orders
 */
-func (client *Client) GetSpotOrders(status, instrument_id string, options *map[string]string) (*[]map[string]interface{}, error) {
-	r := []map[string]interface{}{}
+func (client *Client) GetSpotOrders(status, instrument_id string, options *map[string]string) (*[]interface{}, error) {
+	r := []interface{}{}
 
 	fullOptions := NewParams()
 	fullOptions["instrument_id"] = instrument_id
 	fullOptions["status"] = status
 	if options != nil && len(*options) > 0 {
-		fullOptions["from"] = (*options)["from"]
-		fullOptions["to"] = (*options)["to"]
+		fullOptions["before"] = (*options)["before"]
+		fullOptions["after"] = (*options)["after"]
 		fullOptions["limit"] = (*options)["limit"]
 	}
 
@@ -97,22 +97,26 @@ func (client *Client) GetSpotOrders(status, instrument_id string, options *map[s
 HTTP请求
 GET /api/spot/v3/orders_pending
 */
-func (client *Client) GetSpotOrdersPending(options *map[string]string) (*[]map[string]interface{}, error) {
-	r := []map[string]interface{}{}
+func (client *Client) GetSpotOrdersPending(instrumentId string, options *map[string]string) (*[]interface{}, error) {
+	r := []interface{}{}
 
 	fullOptions := NewParams()
-	uri := SPOT_ORDERS_PENDING
+	fullOptions["instrument_id"] = instrumentId
+
 	if options != nil && len(*options) > 0 {
-		fullOptions["instrument_id"] = (*options)["instrument_id"]
-		fullOptions["from"] = (*options)["from"]
-		fullOptions["to"] = (*options)["to"]
-		fullOptions["limit"] = (*options)["limit"]
-		uri = BuildParams(SPOT_ORDERS_PENDING, fullOptions)
+
+		for k, v := range *options {
+			if v != "" && len(v) > 0 {
+				fullOptions[k] = v
+			}
+		}
 	}
 
+	uri := BuildParams(SPOT_ORDERS_PENDING, fullOptions)
 	if _, err := client.Request(GET, uri, nil, &r); err != nil {
 		return nil, err
 	}
+
 	return &r, nil
 }
 
@@ -127,8 +131,8 @@ GET /api/spot/v3/orders/<order_id>
 或者
 GET /api/spot/v3/orders/<client_oid>
 */
-func (client *Client) GetSpotOrdersById(instrumentId, orderOrClientId string) (*map[string]interface{}, error) {
-	r := map[string]interface{}{}
+func (client *Client) GetSpotOrdersById(instrumentId, orderOrClientId string) (*map[string]string, error) {
+	r := map[string]string{}
 	uri := strings.Replace(SPOT_ORDERS_BY_ID, "{order_client_id}", orderOrClientId, -1)
 	options := NewParams()
 	options["instrument_id"] = instrumentId
@@ -155,8 +159,8 @@ func (client *Client) GetSpotFills(order_id, instrument_id string, options *map[
 	fullOptions["instrument_id"] = instrument_id
 	fullOptions["order_id"] = order_id
 	if options != nil && len(*options) > 0 {
-		fullOptions["from"] = (*options)["from"]
-		fullOptions["to"] = (*options)["to"]
+		fullOptions["before"] = (*options)["before"]
+		fullOptions["after"] = (*options)["after"]
 		fullOptions["limit"] = (*options)["limit"]
 	}
 
@@ -178,8 +182,8 @@ func (client *Client) GetSpotFills(order_id, instrument_id string, options *map[
 HTTP请求
 GET /api/spot/v3/instruments
 */
-func (client *Client) GetSpotInstruments() (*[]map[string]interface{}, error) {
-	r := []map[string]interface{}{}
+func (client *Client) GetSpotInstruments() (*[]map[string]string, error) {
+	r := []map[string]string{}
 
 	if _, err := client.Request(GET, SPOT_INSTRUMENTS, nil, &r); err != nil {
 		return nil, err
@@ -316,9 +320,10 @@ func (client *Client) PostSpotOrders(side, instrument_id string, optionalOrderIn
 	postParams["instrument_id"] = instrument_id
 
 	if optionalOrderInfo != nil && len(*optionalOrderInfo) > 0 {
-		postParams["client_oid"] = (*optionalOrderInfo)["client_oid"]
-		postParams["type"] = (*optionalOrderInfo)["type"]
-		postParams["margin_trading"] = (*optionalOrderInfo)["margin_trading"]
+
+		for k, v := range *optionalOrderInfo {
+			postParams[k] = v
+		}
 
 		if postParams["type"] == "limit" {
 			postParams["price"] = (*optionalOrderInfo)["price"]

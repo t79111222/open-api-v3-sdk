@@ -50,7 +50,9 @@ func (a *OKWSAgent) Start(config *Config) error {
 		log.Fatalf("dial:%+v", err)
 		return err
 	} else {
-		log.Printf("Connected to %s", a.baseUrl)
+		if a.config.IsPrint {
+			log.Printf("Connected to %s", a.baseUrl)
+		}
 		a.conn = c
 		a.config = config
 
@@ -85,7 +87,9 @@ func (a *OKWSAgent) Subscribe(channel, filter string, cb ReceivedDataCallback) e
 	}
 
 	msg, err := Struct2JsonString(bo)
-	log.Printf("Send Msg: %s", msg)
+	if a.config.IsPrint {
+		log.Printf("Send Msg: %s", msg)
+	}
 	if err := a.conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
 		return err
 	}
@@ -95,10 +99,13 @@ func (a *OKWSAgent) Subscribe(channel, filter string, cb ReceivedDataCallback) e
 		cbs = []ReceivedDataCallback{}
 		a.activeChannels[st.channel] = false
 	}
-	cbs = append(cbs, cb)
-	a.subMap[st.channel] = cbs
-	fullTopic, err := st.ToString()
-	a.subMap[fullTopic] = cbs
+
+	if cb != nil {
+		cbs = append(cbs, cb)
+		fullTopic, _ := st.ToString()
+		a.subMap[st.channel] = cbs
+		a.subMap[fullTopic] = cbs
+	}
 
 	return nil
 }
@@ -114,7 +121,9 @@ func (a *OKWSAgent) UnSubscribe(channel, filter string) error {
 	}
 
 	msg, err := Struct2JsonString(bo)
-	log.Printf("Send Msg: %s", msg)
+	if a.config.IsPrint {
+		log.Printf("Send Msg: %s", msg)
+	}
 	if err := a.conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
 		return err
 	}
@@ -282,9 +291,11 @@ func (a *OKWSAgent) receive() {
 
 		rsp, err := loadResponse(txtMsg)
 		if rsp != nil {
-			log.Printf("LoadedRep: %+v, err: %+v", rsp, err)
+			if a.config.IsPrint {
+				log.Printf("LoadedRep: %+v, err: %+v", rsp, err)
+			}
 		} else {
-			log.Printf("TextMessg: %s", txtMsg)
+			log.Printf("TextMsg: %s", txtMsg)
 		}
 
 		if err != nil {
@@ -298,17 +309,24 @@ func (a *OKWSAgent) receive() {
 			er := rsp.(*WSEventResponse)
 			a.wsEvtCh <- er
 		case *WSDepthTableResponse:
-
+			var err error
 			dtr := rsp.(*WSDepthTableResponse)
 			hotDepths := a.hotDepthsMap[dtr.Table]
 			if hotDepths == nil {
 				hotDepths = NewWSHotDepths(dtr.Table)
-				hotDepths.loadWSDepthTableResponse(dtr)
-				a.hotDepthsMap[dtr.Table] = hotDepths
+				err = hotDepths.loadWSDepthTableResponse(dtr)
+				if err == nil {
+					a.hotDepthsMap[dtr.Table] = hotDepths
+				}
 			} else {
-				hotDepths.loadWSDepthTableResponse(dtr)
+				err = hotDepths.loadWSDepthTableResponse(dtr)
 			}
-			a.wsTbCh <- dtr
+
+			if err == nil {
+				a.wsTbCh <- dtr
+			} else {
+				log.Printf("Failed to loadWSDepthTableResponse, dtr: %+v, err: %+v", dtr, err)
+			}
 
 		case *WSTableResponse:
 			tb := rsp.(*WSTableResponse)

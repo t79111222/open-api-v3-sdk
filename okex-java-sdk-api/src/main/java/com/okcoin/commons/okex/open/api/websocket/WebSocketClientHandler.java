@@ -86,6 +86,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
+        this.webSocketClient.closeTimer();
     }
 
     private static String uncompress(ByteBuf buf) {
